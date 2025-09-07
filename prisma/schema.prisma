@@ -1,0 +1,148 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+// Users Entity (Company Employees)
+model User {
+    id        String @id @default(cuid())
+    userName  String @db.VarChar(25)
+    userEmpID String @unique @db.VarChar(5)
+
+    // Relations
+    orders         Order[]
+    paymentMethods PaymentMethod[]
+    orderItems     OrderItem[] // Direct relation for easier queries
+
+    // Standard managed fields
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    createdBy  String?
+    modifiedBy String?
+}
+
+// Order Header Entity
+model Order {
+    id          String  @id @default(cuid())
+    orderNumber String  @unique @db.VarChar(12)
+    description String? @db.VarChar(255)
+
+    // User relation
+    user   User   @relation(fields: [userId], references: [id])
+    userId String
+
+    // Order timing
+    orderDate DateTime @db.Date
+    orderTime DateTime @db.Time
+
+    // Financial calculations (all in cents/smallest currency unit)
+    deliveryFee        Int     @default(0)
+    discountPercent    Decimal @default(0) @db.Decimal(5, 2) // 0-100%
+    discountLimit      Int     @default(0)
+    additionalDiscount Int     @default(0)
+    extra              Int     @default(0) // Computed field
+    totalAmountRaw     Int     @default(0) // Computed field  
+    totalAmount        Int     @default(0) // Computed field
+
+    // Currency and status
+    currency   String      @default("IDR") @db.VarChar(3)
+    status     OrderStatus @relation(fields: [statusCode], references: [code])
+    statusCode String      @default("O") @db.VarChar(1)
+
+    // Navigation to order items (composition)
+    items OrderItem[]
+
+    // Standard managed fields
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    createdBy  String?
+    modifiedBy String?
+}
+
+// Order Items Entity
+model OrderItem {
+    id String @id @default(cuid())
+
+    // Relations
+    order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    orderId String
+
+    user   User   @relation(fields: [userId], references: [id])
+    userId String
+
+    // Item details
+    menu            String @db.VarChar(100) // Menu item name/description
+    quantity        Int    @default(1)
+    price           Int // Price per item in cents
+    itemDeliveryFee Int    @default(0) // Computed field
+    itemDiscount    Int    @default(0) // Computed field
+    itemExtra       Int    @default(0) // Computed field
+    total           Int    @default(0) // Computed field
+
+    // Status and currency
+    status     ItemStatus @relation(fields: [statusCode], references: [code])
+    statusCode String     @default("U") @db.VarChar(1)
+    currency   String     @default("IDR") @db.VarChar(3)
+
+    // Standard managed fields
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    createdBy  String?
+    modifiedBy String?
+}
+
+// Payment Methods Entity (Child of User)
+model PaymentMethod {
+    id String @id @default(cuid())
+
+    // User relation
+    user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId String
+
+    // Payment details
+    paymentName   String  @db.VarChar(50)
+    accountNumber String  @db.VarChar(100)
+    isPrimary     Boolean @default(false)
+
+    // Standard managed fields
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    createdBy  String?
+    modifiedBy String?
+}
+
+// Item Status CodeList
+model ItemStatus {
+    code  String  @id @db.VarChar(1) // 'P' or 'U'
+    name  String // 'Paid' or 'Unpaid'
+    descr String? // Description
+
+    // Relations
+    orderItems OrderItem[]
+
+    // Standard managed fields
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    createdBy  String?
+    modifiedBy String?
+}
+
+// Order Status CodeList  
+model OrderStatus {
+    code  String  @id @db.VarChar(1) // 'O', 'C', 'A'
+    name  String // 'Open', 'Close', 'Cancel'
+    descr String? // Description
+
+    // Relations
+    orders Order[]
+
+    // Standard managed fields
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    createdBy  String?
+    modifiedBy String?
+}
