@@ -86,7 +86,7 @@ export function RegisterForm({
 			// Redirect to login page after a short delay
 			setTimeout(() => {
 				router.push("/login");
-			}, 2000);
+			}, 500);
 		} catch (error) {
 			console.error("Registration error:", error);
 			toast.error("Registration Failed", {
