@@ -25,15 +25,16 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { AvatarSelector } from "./avatar-selector";
-import router from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Separator } from "./ui/separator";
-import { RegisterSchema } from "@/lib/validation/auth";
+import { RegisterSchema } from "@/lib/validation/validation";
 
 export function RegisterForm({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
 	const [isLoading, setLoading] = useState(false);
+	const router = useRouter();
 
 	const form = useForm<z.infer<typeof RegisterSchema>>({
 		resolver: zodResolver(RegisterSchema),
@@ -58,6 +59,7 @@ export function RegisterForm({
 					userName: data.userName,
 					userEmpID: data.userEmpID,
 					password: data.password,
+					confirmPassword: data.confirmPassword,
 					avatar: data.avatar,
 				}),
 			});
@@ -83,7 +85,7 @@ export function RegisterForm({
 
 			// Redirect to login page after a short delay
 			setTimeout(() => {
-				router.redirect("/login");
+				router.push("/login");
 			}, 2000);
 		} catch (error) {
 			console.error("Registration error:", error);

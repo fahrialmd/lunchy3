@@ -23,7 +23,8 @@ export const RegisterSchema = z.object({
 // Base schema for user login
 export const LoginSchema = z.object({
     userEmpID: z.string()
-        .length(1, "Required"),
+        .length(5, "Password is required")
+        .regex(/^[0-9]+$/, "This is not Employee ID"),
     password: z.string()
-        .min(1, "Required")
+        .min(1, "Password is required")
 });

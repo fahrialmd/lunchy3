@@ -16,14 +16,18 @@ import {
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoginSchema } from "@/lib/validation/auth";
+import { LoginSchema } from "@/lib/validation/validation";
 import z from "zod";
+import { signIn } from "next-auth/react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm({
 	className,
 	...props
 }: React.ComponentProps<"div">) {
 	const [isLoading, setLoading] = useState(false);
+	const router = useRouter();
 
 	const form = useForm<z.infer<typeof LoginSchema>>({
 		resolver: zodResolver(LoginSchema),
@@ -33,7 +37,39 @@ export function LoginForm({
 		},
 	});
 
-	async function onSubmit(data: z.infer<typeof LoginSchema>) {}
+	async function onSubmit(data: z.infer<typeof LoginSchema>) {
+		setLoading(true);
+		try {
+			const result = await signIn("credentials", {
+				userEmpID: data.userEmpID,
+				password: data.password,
+				redirect: false,
+			});
+
+			if (result?.error) {
+				toast.error("Login Failed", {
+					description: "Invalid Employee ID or password. Please try again.",
+				});
+				return;
+			}
+
+			if (result?.ok) {
+				toast.success("Login Successful!", {
+					description: "Welcome back! Redirecting to dashboard...",
+				});
+
+				// Redirect to dashboard or desired page
+				router.push("/dashboard");
+			}
+		} catch (error) {
+			console.error("Login error:", error);
+			toast.error("Login Failed", {
+				description: "Something went wrong. Please try again.",
+			});
+		} finally {
+			setLoading(false);
+		}
+	}
 
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -89,8 +125,14 @@ export function LoginForm({
 							/>
 							<div className="flex flex-col gap-3">
 								<Button type="submit" className="w-full" disabled={isLoading}>
-									{isLoading ? "Creating Account..." : "Create Account"}
+									{isLoading ? "Loading..." : "Sign In"}
 								</Button>
+							</div>
+							<div className="text-center text-sm">
+								Don&apos;t have an account?{" "}
+								<a href="/register" className="underline underline-offset-4">
+									Sign up
+								</a>
 							</div>
 						</form>
 					</Form>

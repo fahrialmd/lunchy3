@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import { RegisterSchema } from "@/lib/validation/auth";
+import { RegisterSchema } from "@/lib/validation/validation";
 
 const prisma = new PrismaClient();
 
