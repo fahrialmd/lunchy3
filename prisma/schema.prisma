@@ -9,20 +9,16 @@ datasource db {
 
 // Users Entity (Company Employees)
 model User {
-    id        String @id @default(cuid())
-    userName  String @db.VarChar(25)
-    userEmpID String @unique @db.VarChar(5)
+    id        String  @id @default(cuid())
+    userName  String  @db.VarChar(25)
+    userEmpID String  @unique @db.VarChar(5)
+    password  String
+    avatar    String? @db.VarChar(255)
 
     // Relations
     orders         Order[]
     paymentMethods PaymentMethod[]
     orderItems     OrderItem[] // Direct relation for easier queries
-
-    // Standard managed fields
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    createdBy  String?
-    modifiedBy String?
 }
 
 // Order Header Entity
@@ -55,12 +51,6 @@ model Order {
 
     // Navigation to order items (composition)
     items OrderItem[]
-
-    // Standard managed fields
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    createdBy  String?
-    modifiedBy String?
 }
 
 // Order Items Entity
@@ -87,12 +77,6 @@ model OrderItem {
     status     ItemStatus @relation(fields: [statusCode], references: [code])
     statusCode String     @default("U") @db.VarChar(1)
     currency   String     @default("IDR") @db.VarChar(3)
-
-    // Standard managed fields
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    createdBy  String?
-    modifiedBy String?
 }
 
 // Payment Methods Entity (Child of User)
@@ -107,12 +91,6 @@ model PaymentMethod {
     paymentName   String  @db.VarChar(50)
     accountNumber String  @db.VarChar(100)
     isPrimary     Boolean @default(false)
-
-    // Standard managed fields
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    createdBy  String?
-    modifiedBy String?
 }
 
 // Item Status CodeList
@@ -139,10 +117,4 @@ model OrderStatus {
 
     // Relations
     orders Order[]
-
-    // Standard managed fields
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-    createdBy  String?
-    modifiedBy String?
 }
