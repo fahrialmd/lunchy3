@@ -10,7 +10,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
 	Form,
 	FormControl,
@@ -26,29 +25,9 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { AvatarSelector } from "./avatar-selector";
-
-const FormSchema = z
-	.object({
-		userName: z.string().min(1, {
-			message: "Full name is required",
-		}),
-		userEmpID: z.string().length(5, {
-			message: "Employee ID must be exactly 5 characters.",
-		}),
-		password: z.string().min(6, {
-			message: "Password must be at least 6 characters.",
-		}),
-		avatar: z.string().min(1, {
-			message: "Avatar is required.",
-		}),
-		confirmPassword: z.string().min(6, {
-			message: "Please confirm your password.",
-		}),
-	})
-	.refine((data) => data.password === data.confirmPassword, {
-		message: "Passwords don't match",
-		path: ["confirmPassword"],
-	});
+import router from "next/navigation";
+import { Separator } from "./ui/separator";
+import { RegisterSchema } from "@/lib/validation/auth";
 
 export function RegisterForm({
 	className,
@@ -56,8 +35,8 @@ export function RegisterForm({
 }: React.ComponentProps<"div">) {
 	const [isLoading, setLoading] = useState(false);
 
-	const form = useForm<z.infer<typeof FormSchema>>({
-		resolver: zodResolver(FormSchema),
+	const form = useForm<z.infer<typeof RegisterSchema>>({
+		resolver: zodResolver(RegisterSchema),
 		defaultValues: {
 			userName: "",
 			userEmpID: "",
@@ -67,15 +46,54 @@ export function RegisterForm({
 		},
 	});
 
-	function onSubmit(data: z.infer<typeof FormSchema>) {
+	async function onSubmit(data: z.infer<typeof RegisterSchema>) {
 		setLoading(true);
-		toast("You submitted the following values", {
-			description: (
-				<pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-					<code className="text-white">{JSON.stringify(data, null, 2)}</code>
-				</pre>
-			),
-		});
+		try {
+			const response = await fetch("/api/register", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					userName: data.userName,
+					userEmpID: data.userEmpID,
+					password: data.password,
+					avatar: data.avatar,
+				}),
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				// Handle validation error
+				toast.error("Registration Failed", {
+					description:
+						result.error || "Something went wrong. Please try again.",
+				});
+				return;
+			}
+
+			// Success
+			toast.success("Account Created Successfully!", {
+				description: `Welcome ${result.user.userName}! You can now sign in with your Employee ID.`,
+			});
+
+			// Clear form
+			form.reset();
+
+			// Redirect to login page after a short delay
+			setTimeout(() => {
+				router.redirect("/login");
+			}, 2000);
+		} catch (error) {
+			console.error("Registration error:", error);
+			toast.error("Registration Failed", {
+				description:
+					"Network error. Please check your connection and try again.",
+			});
+		} finally {
+			setLoading(false);
+		}
 	}
 	return (
 		<div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -86,6 +104,7 @@ export function RegisterForm({
 						Enter your employee details to create Lunchy3 account
 					</CardDescription>
 				</CardHeader>
+				<Separator className="" />
 				<CardContent>
 					<Form {...form}>
 						<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -149,7 +168,7 @@ export function RegisterForm({
 											/>
 										</FormControl>
 										<FormDescription>
-											Your unique 5-character employee identifier (e.g., EMP01).
+											Your unique 5-character employee identifier (e.g., 47814).
 										</FormDescription>
 									</FormItem>
 								)}
@@ -205,7 +224,6 @@ export function RegisterForm({
 							</div>
 						</form>
 					</Form>
-
 					<div className="mt-4 text-center text-sm">
 						Already have an account?{" "}
 						<a href="/login" className="underline underline-offset-4">
