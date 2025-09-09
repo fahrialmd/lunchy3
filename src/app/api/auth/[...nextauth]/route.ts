@@ -1,12 +1,20 @@
 // src/app/api/auth/[...nextauth]/route.ts
-// ✅ NEW (WORKING) - Replace your entire file with this
-
-import NextAuth from "next-auth"
+import NextAuth, { DefaultSession } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcryptjs"
 import { LoginSchema } from "@/lib/validation/validation"
 
+declare module "next-auth" {
+    interface Session {
+        user: {
+            empid: string
+        } & DefaultSession["user"]
+    }
+    interface User {
+        empid: string // ← Changed to match what we return
+    }
+}
 
 const prisma = new PrismaClient()
 
@@ -51,9 +59,8 @@ const handler = NextAuth({
                     return {
                         id: user.id,
                         name: user.userName,
-                        email: user.userEmpID,
                         image: user.avatar,
-                        userEmpID: user.userEmpID,
+                        empid: user.userEmpID,
                     }
                 } catch (error) {
                     console.error("Authentication error:", error)
@@ -70,13 +77,13 @@ const handler = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
-                token.userEmpID = user.userEmpID
+                token.empid = user.empid
             }
             return token
         },
         async session({ session, token }) {
             if (token) {
-                session.user.userEmpID = token.userEmpID as string
+                session.user.empid = token.empid as string
             }
             return session
         },
