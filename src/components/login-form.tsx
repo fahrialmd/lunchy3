@@ -66,9 +66,8 @@ export function LoginForm({
 			toast.error("Login Failed", {
 				description: "Something went wrong. Please try again.",
 			});
-		} finally {
 			setLoading(false);
-		}
+		} 
 	}
 
 	return (

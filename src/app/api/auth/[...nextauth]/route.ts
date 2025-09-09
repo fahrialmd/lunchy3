@@ -12,7 +12,7 @@ declare module "next-auth" {
         } & DefaultSession["user"]
     }
     interface User {
-        empid: string // ← Changed to match what we return
+        empid: string
     }
 }
 
@@ -28,7 +28,6 @@ const handler = NextAuth({
             },
             async authorize(credentials) {
                 try {
-                    // Validate input
                     const validatedFields = LoginSchema.safeParse(credentials)
 
                     if (!validatedFields.success) {
@@ -37,7 +36,6 @@ const handler = NextAuth({
 
                     const { userEmpID, password } = validatedFields.data
 
-                    // Find user by employee ID
                     const user = await prisma.user.findUnique({
                         where: {
                             userEmpID: userEmpID.toUpperCase(),
@@ -48,14 +46,12 @@ const handler = NextAuth({
                         return null
                     }
 
-                    // Verify password
                     const passwordsMatch = await bcrypt.compare(password, user.password)
 
                     if (!passwordsMatch) {
                         return null
                     }
 
-                    // Return user object (excluding password)
                     return {
                         id: user.id,
                         name: user.userName,
@@ -73,6 +69,7 @@ const handler = NextAuth({
     ],
     pages: {
         signIn: "/login",
+        error: "/login",
     },
     callbacks: {
         async jwt({ token, user }) {
@@ -90,8 +87,23 @@ const handler = NextAuth({
     },
     session: {
         strategy: "jwt",
+        // Session will expire in 30 days
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        // Update session activity every 24 hours
+        updateAge: 24 * 60 * 60, // 24 hours
     },
-    debug: process.env.NODE_ENV === "development",
+    jwt: {
+        // JWT tokens expire in 30 days
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
+    events: {
+        async signIn({ user, account, profile, isNewUser }) {
+            console.log(`User ${user.name} signed in`)
+        },
+        async signOut({ session, token }) {
+            console.log(`User signed out`)
+        },
+    },
 })
 
 export { handler as GET, handler as POST }
