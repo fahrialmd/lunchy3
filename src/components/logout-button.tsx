@@ -46,7 +46,7 @@ export function LogoutButton({
             size={size}
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className={`${showText ? 'justify-start gap-2' : ''} ${className}`}
+            className={`${className}`}
         >
             {isLoggingOut ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
