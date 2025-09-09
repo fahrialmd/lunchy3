@@ -10,13 +10,24 @@ export default withAuth(
         console.log(`Middleware: ${pathname}, Token: ${!!token}`)
 
         // Define route categories
-        const protectedRoutes = ['/', '/dashboard', '/profile', '/settings', '/admin']
+        const protectedRoutes = ['/dashboard', '/profile', '/settings', '/admin']
         const publicRoutes = ['/login', '/register', '/forgot-password']
-        const openRoutes = ['/about', '/contact', '/help'] // Always accessible
+        const openRoutes = ['/about', '/contact', '/help']
 
         const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
         const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
         const isOpenRoute = openRoutes.includes(pathname)
+
+        // Handle root path specifically
+        if (pathname === '/') {
+            if (token) {
+                console.log(`Redirecting authenticated user from / to /dashboard`)
+                return NextResponse.redirect(new URL('/dashboard', req.url))
+            } else {
+                console.log(`Redirecting unauthenticated user from / to /login`)
+                return NextResponse.redirect(new URL('/login', req.url))
+            }
+        }
 
         // If user has token and is on public route (login/register), redirect to dashboard
         if (token && isPublicRoute) {
@@ -30,7 +41,7 @@ export default withAuth(
             return NextResponse.redirect(new URL('/login', req.url))
         }
 
-        // Allow access to all other routes
+        // Allow access to all other routes (open routes, API routes, etc.)
         return NextResponse.next()
     },
     {
@@ -38,22 +49,22 @@ export default withAuth(
             authorized: ({ token, req }) => {
                 const { pathname } = req.nextUrl
 
-                // Define route categories
+                // Define route categories (same as above)
                 const protectedRoutes = ['/dashboard', '/profile', '/settings', '/admin']
                 const publicRoutes = ['/login', '/register', '/forgot-password']
-                const openRoutes = ['/', '/about', '/contact', '/help']
+                const openRoutes = ['/about', '/contact', '/help']
 
                 const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
                 const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
                 const isOpenRoute = openRoutes.includes(pathname)
 
-                // Always allow access to open routes
-                if (isOpenRoute) {
+                // Root path - always allow (middleware function will handle redirects)
+                if (pathname === '/') {
                     return true
                 }
 
-                // Always allow access to public routes (middleware function will handle redirects)
-                if (isPublicRoute) {
+                // Always allow access to open routes and public routes
+                if (isOpenRoute || isPublicRoute) {
                     return true
                 }
 
