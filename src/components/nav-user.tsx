@@ -28,7 +28,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { LogoutButton } from "./logout-button"
+import { signOut } from "next-auth/react"
+import { toast } from "sonner"
+import { description } from "./chart-area-interactive"
+import { useState } from "react"
 
 export function NavUser({
   user,
@@ -40,6 +43,25 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+
+    try {
+      // Middleware will automatically redirect to login after signOut
+      await signOut({
+        callbackUrl: "/login",
+        redirect: true,
+      })
+
+      toast.success("Logged out successfully")
+    } catch (error) {
+      toast.error("Error logging out")
+      setIsLoggingOut(false)
+    }
+  }
+
 
   return (
     <SidebarMenu>
@@ -99,8 +121,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogoutButton />
+            <DropdownMenuItem onClick={handleLogout}>
+              <IconLogout />
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
