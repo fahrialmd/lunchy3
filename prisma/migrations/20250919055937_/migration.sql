@@ -1,0 +1,14 @@
+/*
+  Warnings:
+
+  - The values [ADMIN,BUYER,VERIFIED] on the enum `UserRole` will be removed. If these variants are still used in the database, this will fail.
+
+*/
+-- AlterEnum
+BEGIN;
+CREATE TYPE "public"."UserRole_new" AS ENUM ('Admin', 'Buyer', 'verified');
+ALTER TABLE "public"."User" ALTER COLUMN "roles" TYPE "public"."UserRole_new"[] USING ("roles"::text::"public"."UserRole_new"[]);
+ALTER TYPE "public"."UserRole" RENAME TO "UserRole_old";
+ALTER TYPE "public"."UserRole_new" RENAME TO "UserRole";
+DROP TYPE "public"."UserRole_old";
+COMMIT;

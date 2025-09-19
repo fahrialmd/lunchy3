@@ -16,9 +16,10 @@ model User {
     avatar    String @db.VarChar(255)
 
     // Relations
+    roles          UserRole[]
     orders         Order[]
     paymentMethods PaymentMethod[]
-    orderItems     OrderItem[] // Direct relation for easier queries
+    orderItems     OrderItem[]
 }
 
 // Order Header Entity
@@ -117,4 +118,10 @@ model OrderStatus {
 
     // Relations
     orders Order[]
+}
+
+enum UserRole {
+    ADMIN
+    BUYER
+    VERIFIED
 }

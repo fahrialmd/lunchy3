@@ -33,33 +33,39 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { useSession, signOut } from "next-auth/react"
+import { usePathname } from "next/navigation"
 
 const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
+      isActive: false,
     },
     {
       title: "Lifecycle",
       url: "#",
       icon: IconListDetails,
+      isActive: false,
     },
     {
       title: "Analytics",
       url: "#",
       icon: IconChartBar,
+      isActive: false,
     },
     {
       title: "Projects",
       url: "#",
       icon: IconFolder,
+      isActive: false,
     },
     {
-      title: "Team",
-      url: "#",
+      title: "Peopley",
+      url: "/peopley",
       icon: IconUsers,
+      isActive: false,
     },
   ],
   navClouds: [
@@ -149,6 +155,14 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const { data: session } = useSession();
+  const pathName = usePathname()
+
+  const updatedNavMain = data.navMain.map(item => ({
+    ...item,
+    isActive: item.url === pathName
+  }))
+
+  data.navMain = updatedNavMain
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>

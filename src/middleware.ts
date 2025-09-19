@@ -9,14 +9,10 @@ export default withAuth(
 
         console.log(`Middleware: ${pathname}, Token: ${!!token}`)
 
-        // Define route categories
-        const protectedRoutes = ['/dashboard', '/profile', '/settings', '/admin']
+        // Define public routes (everything else is protected)
         const publicRoutes = ['/login', '/register', '/forgot-password']
-        const openRoutes = ['/about', '/contact', '/help']
 
-        const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
         const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-        const isOpenRoute = openRoutes.includes(pathname)
 
         // Handle root path specifically
         if (pathname === '/') {
@@ -35,13 +31,14 @@ export default withAuth(
             return NextResponse.redirect(new URL('/dashboard', req.url))
         }
 
-        // If user has no token and is on protected route, redirect to login
-        if (!token && isProtectedRoute) {
+        // If user has no token and is NOT on public route, redirect to login
+        // (This protects ALL routes except public routes)
+        if (!token && !isPublicRoute) {
             console.log(`Redirecting unauthenticated user from ${pathname} to /login`)
             return NextResponse.redirect(new URL('/login', req.url))
         }
 
-        // Allow access to all other routes (open routes, API routes, etc.)
+        // Allow access (either authenticated user or on public route)
         return NextResponse.next()
     },
     {
@@ -49,32 +46,23 @@ export default withAuth(
             authorized: ({ token, req }) => {
                 const { pathname } = req.nextUrl
 
-                // Define route categories (same as above)
-                const protectedRoutes = ['/dashboard', '/profile', '/settings', '/admin']
+                // Define public routes (everything else is protected)
                 const publicRoutes = ['/login', '/register', '/forgot-password']
-                const openRoutes = ['/about', '/contact', '/help']
 
-                const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
                 const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-                const isOpenRoute = openRoutes.includes(pathname)
 
                 // Root path - always allow (middleware function will handle redirects)
                 if (pathname === '/') {
                     return true
                 }
 
-                // Always allow access to open routes and public routes
-                if (isOpenRoute || isPublicRoute) {
+                // Always allow access to public routes
+                if (isPublicRoute) {
                     return true
                 }
 
-                // For protected routes, require a token
-                if (isProtectedRoute) {
-                    return !!token
-                }
-
-                // Allow access to any other routes by default
-                return true
+                // For ALL OTHER routes, require a token (PROTECT EVERYTHING ELSE)
+                return !!token
             },
         },
     }

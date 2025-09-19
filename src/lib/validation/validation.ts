@@ -28,3 +28,14 @@ export const LoginSchema = z.object({
     password: z.string()
         .min(1, "Password is required")
 });
+
+// Schema for peopley(users) list query
+export const PeopleyListSchema = z.object({
+    userEmpID: z.string()
+        .max(5, "Employee ID must be exactly 5 characters")
+        .regex(/^[0-9]+$/, "Employee ID must contain only numbers")
+        .transform(val => val.toUpperCase()),
+    roles: z.string({
+        error: "Please select a language."
+    }),
+})

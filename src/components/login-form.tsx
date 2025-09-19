@@ -50,6 +50,7 @@ export function LoginForm({
 				toast.error("Login Failed", {
 					description: "Invalid Employee ID or password. Please try again.",
 				});
+				setLoading(false);
 				return;
 			}
 
@@ -67,7 +68,7 @@ export function LoginForm({
 				description: "Something went wrong. Please try again.",
 			});
 			setLoading(false);
-		} 
+		}
 	}
 
 	return (
